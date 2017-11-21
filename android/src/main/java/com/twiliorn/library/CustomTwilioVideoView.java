@@ -117,6 +117,16 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     private IntentFilter intentFilter;
     private BecomingNoisyReceiver myNoisyAudioStreamReceiver;
 
+    private static CustomTwilioVideoView instance;
+
+    public static CustomTwilioVideoView getInstance(ThemedReactContext context) {
+        if(instance == null) {
+            instance = new CustomTwilioVideoView(context);
+        }
+
+        return instance;
+    }
+
     public CustomTwilioVideoView(ThemedReactContext context) {
         super(context);
         this.themedReactContext = context;
