@@ -317,7 +317,13 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             audioManager.setMode(previousAudioMode);
             audioManager.abandonAudioFocus(null);
             audioManager.setSpeakerphoneOn(false);
-            getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
+            
+            try {
+                getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
+            }
+            catch(Exception e) {
+                System.out.println("Trying to unregister myNoisyAudioStreamReceiver failed: " +e);
+            }
         }
     }
 
@@ -352,7 +358,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             CameraCapturer.CameraSource cameraSource = cameraCapturer.getCameraSource();
             final boolean isBackCamera = (cameraSource == CameraCapturer.CameraSource.BACK_CAMERA);
             if (thumbnailVideoView != null && thumbnailVideoView.getVisibility() == View.VISIBLE) {
-                thumbnailVideoView.setMirror(isBackCamera);
+                thumbnailVideoView.setMirror(false);
             }
         }
     }
