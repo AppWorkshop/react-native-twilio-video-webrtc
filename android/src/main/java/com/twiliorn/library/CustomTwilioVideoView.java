@@ -513,7 +513,6 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
                 participant.getVideoTracks().get(0)
             );
         }
-        participant.setListener(null);
     }
 
 
