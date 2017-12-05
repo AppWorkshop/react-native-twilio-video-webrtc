@@ -196,6 +196,8 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
          * In case it wasn't set.
          */
         if (themedReactContext.getCurrentActivity() != null) {
+            getContext().registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+            
             /*
             * If the local video track was released when the app was put in the background, recreate.
             */
@@ -239,6 +241,13 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             localVideoTrack.release();
             localVideoTrack = null;
         }
+        
+        try {
+            getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
+        }
+        catch(Exception e) {
+            System.out.println("Trying to unregister myNoisyAudioStreamReceiver failed: " +e);
+        }
     }
 
     @Override
@@ -263,6 +272,13 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         if (localAudioTrack != null) {
             localAudioTrack.release();
             localAudioTrack = null;
+        }
+        
+        try {
+            getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
+        }
+        catch(Exception e) {
+            System.out.println("Trying to unregister myNoisyAudioStreamReceiver failed: " +e);
         }
     }
 
