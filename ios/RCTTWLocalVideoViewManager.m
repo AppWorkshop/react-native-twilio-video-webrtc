@@ -20,7 +20,7 @@ RCT_EXPORT_MODULE()
 - (UIView *)view {
   UIView *container = [[UIView alloc] init];
   TVIVideoView *inner = [[TVIVideoView alloc] init];
-  inner.contentMode = UIViewContentModeScaleAspectFill;
+  inner.contentMode = UIViewContentModeScaleAspectFit;
   [container addSubview:inner];
   return container;
 }

@@ -9,6 +9,8 @@ package com.twiliorn.library;
 
 import android.content.Context;
 
+import org.webrtc.RendererCommon;
+
 public class TwilioRemotePreview extends RNVideoViewGroup {
 
     private static final String TAG = "TwilioRemotePreview";

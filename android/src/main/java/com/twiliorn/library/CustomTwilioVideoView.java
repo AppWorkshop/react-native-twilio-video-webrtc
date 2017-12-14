@@ -103,12 +103,14 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
      * A VideoView receives frames from a local or remote video track and renders them
      * to an associated view.
      */
-    private static VideoView primaryVideoView;
-    private static VideoView thumbnailVideoView;
+    private static VideoView remoteVideoView; //remote view
+    private static VideoView localVideoView; //local view
+
     private static VideoTrack  participantVideoTrack;
     private static LocalVideoTrack localVideoTrack;
 
-    private static CameraCapturer  cameraCapturer;
+    private static CameraCapturerCompat cameraCapturerCompat;
+    //private static CameraCapturer  cameraCapturer;
     private LocalAudioTrack localAudioTrack;
     private AudioManager    audioManager;
     private String          participantIdentity;
@@ -120,6 +122,8 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     private static CustomTwilioVideoView instance;
 
     public static CustomTwilioVideoView getInstance(ThemedReactContext context) {
+        Log.d(TAG, "getInstance");
+
         if(instance == null) {
             instance = new CustomTwilioVideoView(context);
         }
@@ -129,6 +133,9 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
     public CustomTwilioVideoView(ThemedReactContext context) {
         super(context);
+
+        Log.d(TAG, "constructor with context");
+
         this.themedReactContext = context;
         this.eventEmitter = themedReactContext.getJSModule(RCTEventEmitter.class);
 
@@ -156,58 +163,46 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         localAudioTrack = LocalAudioTrack.create(getContext(), true);
         Log.i("CustomTwilioVideoView", "Create local media");
 
-        // Share your camera
-        cameraCapturer = new CameraCapturer(
-            getContext(),
-            CameraCapturer.CameraSource.FRONT_CAMERA,
-            new CameraCapturer.Listener() {
-                @Override
-                public void onFirstFrameAvailable() {
-                    Log.i("CustomTwilioVideoView", "Got a local camera track");
-                }
+        //Share your camera
+        cameraCapturerCompat = new CameraCapturerCompat(getContext(), getAvailableCameraSource());
+        localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturerCompat.getVideoCapturer());
 
-                @Override
-                public void onCameraSwitched() {
-
-                }
-
-                @Override
-                public void onError(int i) {
-                    Log.i("CustomTwilioVideoView", "Error getting camera");
-                }
-            }
-        );
-
-        if (cameraCapturer.getSupportedFormats().size() > 0) {
-            localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturer);
-            if (thumbnailVideoView != null && localVideoTrack != null) {
-                localVideoTrack.addRenderer(thumbnailVideoView);
-            }
-            setThumbnailMirror();
+        if (localVideoView != null && localVideoTrack != null) {
+            localVideoTrack.addRenderer(localVideoView);
         }
+
+        setThumbnailMirror();
         connectToRoom();
+    }
+
+    private CameraCapturer.CameraSource getAvailableCameraSource() {
+        return(CameraCapturer.isSourceAvailable(CameraCapturer.CameraSource.FRONT_CAMERA)) ?
+                (CameraCapturer.CameraSource.FRONT_CAMERA) :
+                (CameraCapturer.CameraSource.BACK_CAMERA);
     }
 
     // ===== LIFECYCLE EVENTS ======================================================================
 
     @Override
     public void onHostResume() {
+        Log.i("CustomTwilioVideoView", "Host resume");
+
         /*
          * In case it wasn't set.
          */
         if (themedReactContext.getCurrentActivity() != null) {
             getContext().registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
-            
+
             /*
             * If the local video track was released when the app was put in the background, recreate.
             */
-            if (cameraCapturer != null && localVideoTrack == null) {
-                localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturer);
+            if (cameraCapturerCompat != null && localVideoTrack == null) {
+                localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturerCompat.getVideoCapturer());
             }
 
             if(localVideoTrack != null) {
-                if (thumbnailVideoView != null) {
-                    localVideoTrack.addRenderer(thumbnailVideoView);
+                if (localVideoView != null) {
+                    localVideoTrack.addRenderer(localVideoView);
                 }
 
                 /*
@@ -241,7 +236,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             localVideoTrack.release();
             localVideoTrack = null;
         }
-        
+
         try {
             getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
         }
@@ -273,7 +268,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             localAudioTrack.release();
             localAudioTrack = null;
         }
-        
+
         try {
             getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
         }
@@ -319,7 +314,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             previousAudioMode = audioManager.getMode();
             // Request audio focus before making any device switch.
             audioManager.requestAudioFocus(null, AudioManager.STREAM_VOICE_CALL,
-                                           AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
             /*
              * Use MODE_IN_COMMUNICATION as the default audio mode. It is required
              * to be in this mode when playout and/or recording starts for the best
@@ -333,7 +328,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             audioManager.setMode(previousAudioMode);
             audioManager.abandonAudioFocus(null);
             audioManager.setSpeakerphoneOn(false);
-            
+
             try {
                 getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
             }
@@ -364,26 +359,28 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         }
         if (localVideoTrack != null) {
             localVideoTrack.release();
+
             localVideoTrack = null;
         }
+
     }
 
     // ===== BUTTON LISTENERS ======================================================================
     private static void setThumbnailMirror() {
-        if (cameraCapturer != null) {
-            CameraCapturer.CameraSource cameraSource = cameraCapturer.getCameraSource();
+        if (cameraCapturerCompat != null) {
+            CameraCapturer.CameraSource cameraSource = cameraCapturerCompat.getCameraSource();
             final boolean isBackCamera = (cameraSource == CameraCapturer.CameraSource.BACK_CAMERA);
-            if (thumbnailVideoView != null && thumbnailVideoView.getVisibility() == View.VISIBLE) {
-                thumbnailVideoView.setMirror(false);
+            if (localVideoView != null && localVideoView.getVisibility() == View.VISIBLE) {
+                localVideoView.setMirror(false);
             }
         }
     }
 
     public void switchCamera() {
-        if (cameraCapturer != null) {
-            cameraCapturer.switchCamera();
+        if (cameraCapturerCompat != null) {
+            cameraCapturerCompat.switchCamera();
             setThumbnailMirror();
-            CameraCapturer.CameraSource cameraSource = cameraCapturer.getCameraSource();
+            CameraCapturer.CameraSource cameraSource = cameraCapturerCompat.getCameraSource();
             final boolean isBackCamera = cameraSource == CameraCapturer.CameraSource.BACK_CAMERA;
             WritableMap event = new WritableNativeMap();
             event.putBoolean("isBackCamera", isBackCamera);
@@ -498,8 +495,8 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
          */
         if (participant.getVideoTracks().size() > 0) {
             addParticipantVideo(
-                participant,
-                participant.getVideoTracks().get(0)
+                    participant,
+                    participant.getVideoTracks().get(0)
             );
         }
 
@@ -525,8 +522,8 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
          */
         if (participant.getVideoTracks().size() > 0) {
             removeParticipantVideo(
-                participant,
-                participant.getVideoTracks().get(0)
+                    participant,
+                    participant.getVideoTracks().get(0)
             );
         }
     }
@@ -592,20 +589,20 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     }
 
     private void addParticipantVideo(Participant participant, VideoTrack videoTrack) {
-        if (participantVideoTrack != null && primaryVideoView != null) {
-            participantVideoTrack.removeRenderer(primaryVideoView);
+        if (participantVideoTrack != null && remoteVideoView != null) {
+            participantVideoTrack.removeRenderer(remoteVideoView);
         }
         participantVideoTrack = videoTrack;
-        if (primaryVideoView != null) {
-            participantVideoTrack.addRenderer(primaryVideoView);
+        if (remoteVideoView != null) {
+            participantVideoTrack.addRenderer(remoteVideoView);
         }
         WritableMap event = this.buildParticipantVideoEvent(participant, videoTrack);
         pushEvent(CustomTwilioVideoView.this, ON_PARTICIPANT_ADDED_VIDEO_TRACK, event);
     }
 
     private void removeParticipantVideo(Participant participant, VideoTrack videoTrack) {
-        if (participantVideoTrack != null && primaryVideoView != null) {
-            participantVideoTrack.removeRenderer(primaryVideoView);
+        if (participantVideoTrack != null && remoteVideoView != null) {
+            participantVideoTrack.removeRenderer(remoteVideoView);
         }
         participantVideoTrack = null;
         WritableMap event = this.buildParticipantVideoEvent(participant, videoTrack);
@@ -618,14 +615,14 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     }
 
     public static void registerPrimaryVideoView(VideoView v) {
-        primaryVideoView = v;
+        remoteVideoView = v;
         if (participantVideoTrack != null) {
             participantVideoTrack.addRenderer(v);
         }
     }
 
     public static void registerThumbnailVideoView(VideoView v) {
-        thumbnailVideoView = v;
+        localVideoView = v;
         if (localVideoTrack != null) {
             localVideoTrack.addRenderer(v);
         }
