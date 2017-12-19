@@ -19,6 +19,10 @@ const { TWVideoModule } = NativeModules
 export default class extends Component {
   static propTypes = {
     /**
+     * Flag that is used to start local video, which determines if the permissions prompt displays
+     */
+    requiresLocalVideo: PropTypes.bool,
+    /**
      * Flag that enables screen sharing RCTRootView instead of camera capture
      */
     screenShare: PropTypes.bool,
@@ -122,7 +126,11 @@ export default class extends Component {
 
   componentWillMount () {
     this._registerEvents()
-    this._startLocalVideo()
+
+    if(this.props.requiresLocalVideo) {
+      this._startLocalVideo()
+    }
+
     this._startLocalAudio()
   }
 
