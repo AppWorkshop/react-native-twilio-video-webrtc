@@ -22,6 +22,6 @@ public class TwilioRemotePreviewManager extends SimpleViewManager<TwilioRemotePr
 
     @Override
     protected TwilioRemotePreview createViewInstance(ThemedReactContext reactContext) {
-        return new TwilioRemotePreview(reactContext);
+        return TwilioRemotePreview.getInstance(reactContext);
     }
 }

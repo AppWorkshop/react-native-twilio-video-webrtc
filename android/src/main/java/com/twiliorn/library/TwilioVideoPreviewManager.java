@@ -29,6 +29,6 @@ public class TwilioVideoPreviewManager extends SimpleViewManager<TwilioVideoPrev
 
     @Override
     protected TwilioVideoPreview createViewInstance(ThemedReactContext reactContext) {
-        return new TwilioVideoPreview(reactContext);
+        return TwilioVideoPreview.getInstance(reactContext);
     }
 }
