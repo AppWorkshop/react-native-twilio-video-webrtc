@@ -20,6 +20,11 @@ import PropTypes from 'prop-types'
 const propTypes = {
   ...View.propTypes,
   /**
+   * Flag that is used to start local video, which determines if the permissions prompt displays
+   */
+  requiresLocalVideo: PropTypes.bool,
+
+  /**
    * Callback that is called when camera source changes
    */
   onCameraSwitched: PropTypes.func,
@@ -84,7 +89,7 @@ const nativeEvents = {
 
 class CustomTwilioVideoView extends Component {
   connect ({roomName, accessToken}) {
-    this.runCommand(nativeEvents.connectToRoom, [roomName, accessToken])
+    this.runCommand(nativeEvents.connectToRoom, [roomName, accessToken, this.props.requiresLocalVideo])
   }
 
   disconnect () {

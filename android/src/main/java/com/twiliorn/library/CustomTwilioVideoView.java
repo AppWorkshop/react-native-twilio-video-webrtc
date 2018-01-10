@@ -8,16 +8,11 @@
  */
 package com.twiliorn.library;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.media.AudioManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 import android.util.Log;
 import android.view.View;
@@ -46,7 +41,6 @@ import com.twilio.video.VideoView;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -97,6 +91,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     private Room room;
     private String roomName = null;
     private String accessToken = null;
+    private Boolean requiresLocalVideo = true;
     private LocalParticipant localParticipant;
 
     /*
@@ -163,15 +158,22 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         localAudioTrack = LocalAudioTrack.create(getContext(), true);
         Log.i("CustomTwilioVideoView", "Create local media");
 
-        //Share your camera
-        cameraCapturerCompat = new CameraCapturerCompat(getContext(), getAvailableCameraSource());
-        localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturerCompat.getVideoCapturer());
+        if(requiresLocalVideo) {
+            try {
+                //Share your camera
+                cameraCapturerCompat = new CameraCapturerCompat(getContext(), getAvailableCameraSource());
+                localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturerCompat.getVideoCapturer());
 
-        if (localVideoView != null && localVideoTrack != null) {
-            localVideoTrack.addRenderer(localVideoView);
+                if (localVideoView != null && localVideoTrack != null) {
+                    localVideoTrack.addRenderer(localVideoView);
+                }
+
+                setThumbnailMirror();
+            } catch (Exception e) {
+                System.out.println("Error creating video track: " +e);
+            }
         }
 
-        setThumbnailMirror();
         connectToRoom();
     }
 
@@ -279,9 +281,10 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
     // ====== CONNECTING ===========================================================================
 
-    public void connectToRoomWrapper(String roomName, String accessToken) {
+    public void connectToRoomWrapper(String roomName, String accessToken, Boolean requiresLocalVideo) {
         this.roomName = roomName;
         this.accessToken = accessToken;
+        this.requiresLocalVideo = requiresLocalVideo;
 
         Log.i("CustomTwilioVideoView", "Starting connect flow");
         createLocalMedia();

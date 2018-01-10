@@ -12,8 +12,6 @@ import android.util.Log;
 
 import com.facebook.react.uimanager.ThemedReactContext;
 
-import org.webrtc.RendererCommon;
-
 public class TwilioRemotePreview extends RNVideoViewGroup {
 
     private static final String TAG = "TwilioRemotePreview";

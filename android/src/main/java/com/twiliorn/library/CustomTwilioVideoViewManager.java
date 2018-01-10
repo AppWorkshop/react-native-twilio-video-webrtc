@@ -54,7 +54,8 @@ public class CustomTwilioVideoViewManager extends SimpleViewManager<CustomTwilio
             case CONNECT_TO_ROOM:
                 String roomName = args.getString(0);
                 String accessToken = args.getString(1);
-                view.connectToRoomWrapper(roomName, accessToken);
+                Boolean requiresLocalVideo = args.getBoolean(2);
+                view.connectToRoomWrapper(roomName, accessToken, requiresLocalVideo);
                 break;
             case DISCONNECT:
                 view.disconnect();

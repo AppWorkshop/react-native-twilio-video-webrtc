@@ -28,7 +28,7 @@ public class RNVideoViewGroup extends ViewGroup {
     super(context);
 
     surfaceViewRenderer = new VideoView(context);
-    surfaceViewRenderer.setVideoScaleType(VideoScaleType.ASPECT_BALANCED);
+    surfaceViewRenderer.setVideoScaleType(VideoScaleType.ASPECT_FILL);
     addView(surfaceViewRenderer);
     surfaceViewRenderer.setListener(
         new VideoRenderer.Listener() {
