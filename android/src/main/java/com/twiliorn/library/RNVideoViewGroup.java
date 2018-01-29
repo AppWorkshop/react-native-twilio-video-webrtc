@@ -21,14 +21,13 @@ public class RNVideoViewGroup extends ViewGroup {
   private int videoWidth = 0;
   private int videoHeight = 0;
   private final Object layoutSync = new Object();
-  private RendererCommon.ScalingType scalingType = RendererCommon.ScalingType.SCALE_ASPECT_BALANCED;
-
+  private RendererCommon.ScalingType scalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT;
 
   public RNVideoViewGroup(Context context) {
     super(context);
 
     surfaceViewRenderer = new VideoView(context);
-    surfaceViewRenderer.setVideoScaleType(VideoScaleType.ASPECT_FILL);
+    surfaceViewRenderer.setVideoScaleType(VideoScaleType.ASPECT_FIT);
     addView(surfaceViewRenderer);
     surfaceViewRenderer.setListener(
         new VideoRenderer.Listener() {
@@ -72,9 +71,8 @@ public class RNVideoViewGroup extends ViewGroup {
       }
 
       if (videoHeight == 0 || videoWidth == 0) {
-        // These are Twilio defaults.
-        videoHeight = 480;
-        videoWidth = 640;
+        videoHeight = 16;
+        videoWidth = 9;
       }
 
       Point displaySize = RendererCommon.getDisplaySize(
@@ -89,6 +87,7 @@ public class RNVideoViewGroup extends ViewGroup {
       r = l + displaySize.x;
       b = t + displaySize.y;
     }
+
     surfaceViewRenderer.layout(l, t, r, b);
   }
 }
