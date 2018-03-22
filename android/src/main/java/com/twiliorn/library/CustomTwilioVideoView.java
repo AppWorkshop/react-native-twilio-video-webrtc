@@ -161,7 +161,11 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         if(requiresLocalVideo) {
             try {
                 //Share your camera
-                cameraCapturerCompat = new CameraCapturerCompat(getContext(), getAvailableCameraSource());
+                if(cameraCapturerCompat == null) {
+                    Log.i(TAG, "Initialise cameraCapturerCompat");
+                    cameraCapturerCompat = new CameraCapturerCompat(getContext(), getAvailableCameraSource());
+                }
+
                 localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturerCompat.getVideoCapturer());
 
                 if (localVideoView != null && localVideoTrack != null) {
@@ -178,9 +182,9 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     }
 
     private CameraCapturer.CameraSource getAvailableCameraSource() {
-        return(CameraCapturer.isSourceAvailable(CameraCapturer.CameraSource.FRONT_CAMERA)) ?
-                (CameraCapturer.CameraSource.FRONT_CAMERA) :
-                (CameraCapturer.CameraSource.BACK_CAMERA);
+        return(CameraCapturer.isSourceAvailable(CameraCapturer.CameraSource.BACK_CAMERA)) ?
+                (CameraCapturer.CameraSource.BACK_CAMERA) :
+                (CameraCapturer.CameraSource.FRONT_CAMERA);
     }
 
     // ===== LIFECYCLE EVENTS ======================================================================
@@ -287,6 +291,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         this.requiresLocalVideo = requiresLocalVideo;
 
         Log.i("CustomTwilioVideoView", "Starting connect flow");
+
         createLocalMedia();
     }
 
@@ -374,7 +379,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             CameraCapturer.CameraSource cameraSource = cameraCapturerCompat.getCameraSource();
             final boolean isBackCamera = (cameraSource == CameraCapturer.CameraSource.BACK_CAMERA);
             if (localVideoView != null && localVideoView.getVisibility() == View.VISIBLE) {
-                localVideoView.setMirror(false);
+                localVideoView.setMirror(isBackCamera);
             }
         }
     }
