@@ -207,7 +207,7 @@ RCT_EXPORT_METHOD(disconnect) {
 - (void)didConnectToRoom:(TVIRoom *)room {
   NSMutableArray *participants = [NSMutableArray array];
     
-  [[TVIAudioController sharedController] setAudioOutput:TVIAudioOutputVideoChatSpeaker];
+  //[[TVIAudioController sharedController] setAudioOutput:TVIAudioOutputVideoChatSpeaker];
 
   for (TVIParticipant *p in room.participants) {
     p.delegate = self;
